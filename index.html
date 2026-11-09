@@ -3,40 +3,46 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>იპოვე ფიგურა</title>
+  <title>Task 4</title>
   <style>
-    
     * { box-sizing: border-box; }
     body { margin: 0; overflow: hidden; background: #111827; color: #f3f4f6; font-family: Arial, sans-serif; }
     canvas { display: block; touch-action: none; }
     .info { position: fixed; top: 20px; left: 20px; right: 20px; pointer-events: none; }
     .eyebrow { margin-bottom: 8px; color: #93c5fd; font-size: 12px; letter-spacing: 2px; }
     h1 { margin: 0 0 10px; font-size: 26px; }
-    p { margin: 0; max-width: 650px; color: #cbd5e1; font-size: 14px; line-height: 1.7; }
+    p { margin: 0; max-width: 680px; font-size: 14px; line-height: 1.7; color: #cbd5e1; }
     .controls { margin-top: 8px; color: #94a3b8; }
-    .status { position: fixed; left: 20px; bottom: 20px; right: 20px; display: flex; flex-wrap: wrap; gap: 10px 24px; pointer-events: none; font-size: 14px; }
-    .status strong { color: #93c5fd; }
+    .legend { position: fixed; left: 20px; right: 20px; bottom: 20px; pointer-events: none; }
+    .figures { display: flex; flex-wrap: wrap; gap: 10px 24px; font-size: 14px; }
+    .figures span { display: flex; align-items: center; gap: 8px; }
+    .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--color); }
+    .axes { margin-top: 14px; color: #94a3b8; font-size: 12px; }
+    .x { color: #ff7878; }
+    .y { color: #65ef91; }
+    .z { color: #80aaff; }
     @media (max-width: 600px) {
       .info { top: 16px; left: 16px; right: 16px; }
       h1 { font-size: 22px; }
-      p, .status { font-size: 12px; }
-      .status { left: 16px; right: 16px; bottom: 16px; }
+      p, .figures { font-size: 12px; }
+      .legend { left: 16px; right: 16px; bottom: 16px; }
+      .figures { flex-direction: column; gap: 8px; }
     }
-
   </style>
 </head>
 <body>
   <div class="info">
-    <div class="eyebrow">დავალება 03</div>
-    <h1>იპოვე და დააჭირე</h1>
-    <p>დააჭირე ფიგურას — შეიცვლება მისი ფერი, პოზიცია და ფორმა. იპოვე ახალ ადგილას და ისევ დააჭირე!</p>
-    <p class="controls">მარცხენა ღილაკი — კამერის ბრუნვა/შეცვლა. სქროლი — მიახლოება / დაშორება<br />მარჯვენა ღილაკით გადათრევა — ხედის გადატანა<br />ტელეფონზე: შეხება — არჩევა. ერთი თითით გადათრევა — ბრუნვა. ორი თითით — კამერის ცვლილება</p>
+    <div class="eyebrow">დავალება 04</div>
+    <h1>სამი ტრაექტორია</h1>
   </div>
-  <div class="status" role="status" aria-live="polite" aria-atomic="true">
-    <span>ფორმა: <strong id="shape-name">კუბი</strong></span>
-    <span>დაჭერა: <strong id="click-count">0</strong></span>
+  <div class="legend" aria-label="ფიგურებისა და ღერძების ფერები">
+    <div class="figures">
+      <span><i class="dot" style="--color: #60a5fa"></i>კუბი მოძრაობს წინ და უკან</span>
+      <span><i class="dot" style="--color: #f472b6"></i>სფერო — წრეზე</span>
+      <span><i class="dot" style="--color: #fbbf24"></i>კონუსი სპირალს აუყვება და ჩამოუყვება</span>
+    </div>
+    <div class="axes">კოორდინატების ღერძები: <span class="x">წითელი - X</span> · <span class="y">მწვანე - Y</span> · <span class="z">ლურჯი - Z</span></div>
   </div>
-
 
   <!-- Three.js და OrbitControls ერთი და იმავე r128 ვერსიიდან იტვირთება. -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>

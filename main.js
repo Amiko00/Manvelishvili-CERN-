@@ -1,4 +1,4 @@
-//სცენა, კამერა და რენდერერი.
+//სცენა კამერა და რენდერერი
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x111827);
 
@@ -8,161 +8,157 @@ const camera = new THREE.PerspectiveCamera(
   0.1,
   1000
 );
-const distance = window.innerWidth < 600 ? 24 : 16;
-camera.position.set(distance * 0.6, distance * 0.55, distance);
+const distance = window.innerWidth < 600 ? 38 : 24;
+camera.position.set(0.55, 0.45, 0.7).normalize().multiplyScalar(distance);
+camera.position.y += 2;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-//OrbitControls კამერას მართავს. ფიგურის გადაადგილებისას კამერა თავის ადგილას რჩება.
+//OrbitControls სცენის სხვადასხვა მხრიდან დათვალიერებისთვის
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.target.set(0, 1.5, 0);
+controls.target.set(0, 2, 0);
 controls.enableDamping = true;
 controls.dampingFactor = 0.05;
-controls.minDistance = 3;
-controls.maxDistance = 45;
+controls.minDistance = 5;
+controls.maxDistance = 65;
 controls.maxPolarAngle = Math.PI / 2;
 controls.update();
 
-//განათება და ბადე სივრცეში ორიენტაციისთვის.
+//განათება, ბადე და კოორდინატების ღერძები
 scene.add(new THREE.AmbientLight(0xffffff, 0.65));
 const light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(5, 10, 7);
+light.position.set(5, 12, 8);
 scene.add(light);
-scene.add(new THREE.GridHelper(16, 16, 0x475569, 0x273449));
+scene.add(new THREE.GridHelper(24, 24, 0x475569, 0x273449));
 
-//ექვსი შესაძლო ფორმა. გეომეტრიებს ერთხელ ვქმნით და შემდეგ ხელახლა ვიყენებთ.
-const shapes = [
-  { name: "კუბი", geometry: new THREE.BoxGeometry(1.7, 1.7, 1.7) },
-  { name: "სფერო", geometry: new THREE.SphereGeometry(1, 32, 24) },
-  { name: "კონუსი", geometry: new THREE.ConeGeometry(1, 2, 32) },
-  { name: "ცილინდრი", geometry: new THREE.CylinderGeometry(0.85, 0.85, 2, 32) },
-  { name: "ტორუსი (დონატი)", geometry: new THREE.TorusGeometry(0.8, 0.3, 16, 64) },
-  { name: "ოქტაედრი", geometry: new THREE.OctahedronGeometry(1.1) }
-];
-let shapeIndex = 0;
-let hue = 0.58;
-let clickCount = 0;
+// X — წითელი, Y — მწვანე, Z — ლურჯი. ღერძების სიგრძე 8 ერთეულია
+const axes = new THREE.AxesHelper(8);
+scene.add(axes);
 
-const material = new THREE.MeshStandardMaterial({ roughness: 0.35 });
-material.color.setHSL(hue, 0.8, 0.6);
-const figure = new THREE.Mesh(shapes[shapeIndex].geometry, material);
-figure.position.set(0, 1.5, 0);
-scene.add(figure);
+// სამი განსხვავებული ფიგურა
+const cube = new THREE.Mesh(
+  new THREE.BoxGeometry(1.3, 1.3, 1.3),
+  new THREE.MeshStandardMaterial({ color: 0x60a5fa, roughness: 0.4 })
+);
+scene.add(cube);
 
-const shapeName = document.getElementById("shape-name");
-const clickCounter = document.getElementById("click-count");
+const sphere = new THREE.Mesh(
+  new THREE.SphereGeometry(0.8, 32, 24),
+  new THREE.MeshStandardMaterial({ color: 0xf472b6, roughness: 0.4 })
+);
+scene.add(sphere);
 
-//ყოველ დაჭერაზე ფორმა, ფერი და პოზიცია იცვლება.
-const positionLimit = 5;
-const nextPosition = new THREE.Vector3();
+const cone = new THREE.Mesh(
+  new THREE.ConeGeometry(0.8, 1.6, 32),
+  new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.4 })
+);
+scene.add(cone);
 
-function changeFigure() {
-  //წინა ნაბიჯებით ვირჩევთ სხვა ფორმას, ამიტომ იგივე ფორმა ზედიზედ არ მეორდება.
-  const shapeStep = 1 + Math.floor(Math.random() * (shapes.length - 1));
-  shapeIndex = (shapeIndex + shapeStep) % shapes.length;
-  figure.geometry = shapes[shapeIndex].geometry;
+//მოძრაობის საზღვრები და სიჩქარეები
+const lineHalfLength = 6.5;
+const lineHeight = 1;
+const lineZ = 5;
+const lineSpeed = 0.8;
 
-  // ფერის ტონს შესამჩნევი ნაბიჯით ვცვლით და 0–1 დიაპაზონში ვაბრუნებთ.
-  hue = (hue + 0.2 + Math.random() * 0.6) % 1;
-  material.color.setHSL(hue, 0.8, 0.6);
+const circleCenter = new THREE.Vector3(-4, 1.1, -2);
+const circleRadius = 2.2;
+const circleSpeed = 0.75;
 
-  // X და Z -5-დან 5-მდე. Y 1.3-დან 3.5-მდე, რომ ფიგურა ბადის ზემოთ იყოს.
-  // ახალსა და ძველ ადგილს შორის მინიმუმ 2 ერთეულს ვტოვებთ.
-  do {
-    nextPosition.set(
-      THREE.MathUtils.randFloat(-positionLimit, positionLimit),
-      THREE.MathUtils.randFloat(1.3, 3.5),
-      THREE.MathUtils.randFloat(-positionLimit, positionLimit)
-    );
-  } while (nextPosition.distanceTo(figure.position) < 2);
-  figure.position.copy(nextPosition);
-  figure.updateMatrixWorld();
+const spiralCenter = new THREE.Vector3(4, 1.1, -2);
+const spiralRadius = 2;
+const spiralHeight = 5;
+const spiralTurns = 2;
+const spiralSpeed = 0.35;
 
-  clickCount += 1;
-  shapeName.textContent = shapes[shapeIndex].name;
-  clickCounter.textContent = clickCount;
+//progress = 0 ნიშნავს სპირალის დასაწყისს, progress = 1მის ზედა ბოლოს
+//ამავე ფორმულით ვხატავთ ტრაექტორიას და ვამოძრავებთ კონუსს
+function setSpiralPosition(position, progress) {
+  const angle = progress * Math.PI * 2 * spiralTurns;
+  position.set(
+    spiralCenter.x + spiralRadius * Math.cos(angle),
+    spiralCenter.y + spiralHeight * progress,
+    spiralCenter.z + spiralRadius * Math.sin(angle)
+  );
 }
 
-//Raycaster ამოწმებს, ხვდება თუ არა ეკრანზე დაჭერა უშუალოდ ფიგურას.
-const raycaster = new THREE.Raycaster();
-const pointer = new THREE.Vector2();
-
-function hitsFigure(event) {
-  const rect = renderer.domElement.getBoundingClientRect();
-  pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-  pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-  if (Math.abs(pointer.x) > 1 || Math.abs(pointer.y) > 1) return false;
-
-  camera.updateMatrixWorld();
-  figure.updateMatrixWorld();
-  raycaster.setFromCamera(pointer, camera);
-  return raycaster.intersectObject(figure, false).length > 0;
+//ფერადი ხაზები გვიჩვენებს თითოეული ფიგურის მოძრაობის გზას
+function addTrajectory(points, color) {
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  const material = new THREE.LineBasicMaterial({
+    color: color,
+    transparent: true,
+    opacity: 0.5
+  });
+  scene.add(new THREE.Line(geometry, material));
 }
 
-//დაჭერასა და გადათრევას ვარჩევთ. ორი თითით ჟესტიც მხოლოდ კამერას მართავს.
-let press = null;
-const activePointers = new Set();
-const dragThreshold = 6;
+addTrajectory([
+  new THREE.Vector3(-lineHalfLength, lineHeight, lineZ),
+  new THREE.Vector3(lineHalfLength, lineHeight, lineZ)
+], 0x60a5fa);
 
-renderer.domElement.addEventListener("pointerdown", (event) => {
-  activePointers.add(event.pointerId);
-  if (activePointers.size !== 1 || event.button !== 0 ||
-      event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
-    press = null;
-    return;
-  }
+const circlePoints = [];
+const spiralPoints = [];
+const segments = 200;
+for (let i = 0; i <= segments; i += 1) {
+  const progress = i / segments;
+  const angle = progress * Math.PI * 2;
+  circlePoints.push(new THREE.Vector3(
+    circleCenter.x + circleRadius * Math.cos(angle),
+    circleCenter.y,
+    circleCenter.z + circleRadius * Math.sin(angle)
+  ));
 
-  press = {
-    pointerId: event.pointerId,
-    x: event.clientX,
-    y: event.clientY,
-    onFigure: hitsFigure(event),
-    dragged: false
-  };
-});
+  const point = new THREE.Vector3();
+  setSpiralPosition(point, progress);
+  spiralPoints.push(point);
+}
+addTrajectory(circlePoints, 0xf472b6);
+addTrajectory(spiralPoints, 0xfbbf24);
 
-window.addEventListener("pointermove", (event) => {
-  if (press && event.pointerId === press.pointerId) {
-    const moved = Math.hypot(event.clientX - press.x, event.clientY - press.y);
-    // ერთხელ დაწყებული გადათრევა დაჭერად აღარ ითვლება, უკან დაბრუნების შემთხვევაშიც.
-    press.dragged = press.dragged || moved > dragThreshold;
-  }
-});
+//პოზიციებს ვანგარიშობთ გასული დროით (წამებში)
+function updatePositions(time) {
+  //siიცვლება -1-დან 1-მდე კუბი X-ზე მიდის წინ და უკან
+  //Y და Z უცვლელია, ამიტომ მოძრაობის გზა სწორი ხაზია
+  cube.position.set(
+    Math.sin(time * lineSpeed) * lineHalfLength,
+    lineHeight,
+    lineZ
+  );
 
-window.addEventListener("pointerup", (event) => {
-  activePointers.delete(event.pointerId);
-  if (!press || event.pointerId !== press.pointerId) return;
+  //cos და sin ერთად წრიულ მოძრაობას ქმნის XZ სიბრტყეში
+  const circleAngle = time * circleSpeed;
+  sphere.position.set(
+    circleCenter.x + circleRadius * Math.cos(circleAngle),
+    circleCenter.y,
+    circleCenter.z + circleRadius * Math.sin(circleAngle)
+  );
 
-  const releasedPress = press;
-  press = null;
-  const moved = Math.hypot(event.clientX - releasedPress.x, event.clientY - releasedPress.y);
-  if (event.button === 0 && releasedPress.onFigure && !releasedPress.dragged &&
-      moved <= dragThreshold && hitsFigure(event)) {
-    changeFigure();
-  }
-});
+  //progress რბილად იცვლება 0-დან 1მდე და უკან
+  //კონუსი იმავე სპირალს აუყვება და ჩამოუყვება, ადგილზე გადახტომის გარეშე
+  const spiralProgress = (1 - Math.cos(time * spiralSpeed)) / 2;
+  setSpiralPosition(cone.position, spiralProgress);
+}
 
-window.addEventListener("pointercancel", (event) => {
-  activePointers.delete(event.pointerId);
-  press = null;
-});
-window.addEventListener("blur", () => {
-  activePointers.clear();
-  press = null;
-});
+//requestAnimationFrame გვაძლევს დროს მილიწამებში
+//დროის გამოყენებით მოძრაობის სიჩქარე კადრების რაოდენობაზე დამოკიდებული არ არის
+let startTime = null;
 
-//კადრის განახლება საჭიროა OrbitControls ის მოძრაობისთვის
-function animate() {
-  requestAnimationFrame(animate);
+function animate(timestamp) {
+  if (startTime === null) startTime = timestamp;
+  const time = (timestamp - startTime) / 1000;
+
+  updatePositions(time);
   controls.update();
   renderer.render(scene, camera);
+  requestAnimationFrame(animate);
 }
-animate();
+requestAnimationFrame(animate);
 
-//ფანჯრის ზომის შეცვლისას კამერასა და რენდერერს ვაახლებთ
+//ფანჯრის ზომის ცვლილება.
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
