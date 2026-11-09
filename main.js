@@ -1,167 +1,166 @@
 //სცენა კამერა და რენდერერი
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x111827);
+const scena = new THREE.Scene();
+scena.background = new THREE.Color(0x111827);
 
-const camera = new THREE.PerspectiveCamera(
+const kamera = new THREE.PerspectiveCamera(
   60,
   window.innerWidth / window.innerHeight,
   0.1,
   1000
 );
-const distance = window.innerWidth < 600 ? 38 : 24;
-camera.position.set(0.55, 0.45, 0.7).normalize().multiplyScalar(distance);
-camera.position.y += 2;
+const mandzili = window.innerWidth < 600 ? 38 : 24;
+kamera.position.set(0.55, 0.45, 0.7).normalize().multiplyScalar(mandzili);
+kamera.position.y += 2;
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+const rend = new THREE.WebGLRenderer({ antialias: true });
+rend.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+rend.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(rend.domElement);
 
 //OrbitControls სცენის სხვადასხვა მხრიდან დათვალიერებისთვის
-const controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.target.set(0, 2, 0);
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-controls.minDistance = 5;
-controls.maxDistance = 65;
-controls.maxPolarAngle = Math.PI / 2;
-controls.update();
+const kontroli = new THREE.OrbitControls(kamera, rend.domElement);
+kontroli.target.set(0, 2, 0);
+kontroli.enableDamping = true;
+kontroli.dampingFactor = 0.05;
+kontroli.minDistance = 5;
+kontroli.maxDistance = 65;
+kontroli.maxPolarAngle = Math.PI / 2;
+kontroli.update();
 
 //განათება, ბადე და კოორდინატების ღერძები
-scene.add(new THREE.AmbientLight(0xffffff, 0.65));
-const light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(5, 12, 8);
-scene.add(light);
-scene.add(new THREE.GridHelper(24, 24, 0x475569, 0x273449));
+scena.add(new THREE.AmbientLight(0xffffff, 0.65));
+const sinatle = new THREE.DirectionalLight(0xffffff, 1);
+sinatle.position.set(5, 12, 8);
+scena.add(sinatle);
+scena.add(new THREE.GridHelper(24, 24, 0x475569, 0x273449));
 
 // X — წითელი, Y — მწვანე, Z — ლურჯი. ღერძების სიგრძე 8 ერთეულია
-const axes = new THREE.AxesHelper(8);
-scene.add(axes);
+const axebi = new THREE.AxesHelper(8);
+scena.add(axebi);
 
 // სამი განსხვავებული ფიგურა
-const cube = new THREE.Mesh(
+const kubi = new THREE.Mesh(
   new THREE.BoxGeometry(1.3, 1.3, 1.3),
   new THREE.MeshStandardMaterial({ color: 0x60a5fa, roughness: 0.4 })
 );
-scene.add(cube);
+scena.add(kubi);
 
-const sphere = new THREE.Mesh(
+const spero = new THREE.Mesh(
   new THREE.SphereGeometry(0.8, 32, 24),
   new THREE.MeshStandardMaterial({ color: 0xf472b6, roughness: 0.4 })
 );
-scene.add(sphere);
+scena.add(spero);
 
-const cone = new THREE.Mesh(
+const konusi = new THREE.Mesh(
   new THREE.ConeGeometry(0.8, 1.6, 32),
   new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.4 })
 );
-scene.add(cone);
+scena.add(konusi);
 
 //მოძრაობის საზღვრები და სიჩქარეები
-const lineHalfLength = 6.5;
-const lineHeight = 1;
-const lineZ = 5;
-const lineSpeed = 0.8;
+const xazisNaxevari = 6.5;
+const xazisSimagle = 1;
+const xazisZ = 5;
+const xazisSichqare = 0.8;
 
-const circleCenter = new THREE.Vector3(-4, 1.1, -2);
-const circleRadius = 2.2;
-const circleSpeed = 0.75;
+const crisCentri = new THREE.Vector3(-4, 1.1, -2);
+const crisRadiusi = 2.2;
+const crisSichqare = 0.75;
 
-const spiralCenter = new THREE.Vector3(4, 1.1, -2);
-const spiralRadius = 2;
-const spiralHeight = 5;
-const spiralTurns = 2;
-const spiralSpeed = 0.35;
+const spiralisCentri = new THREE.Vector3(4, 1.1, -2);
+const spiralisRadiusi = 2;
+const spiralisSimagle = 5;
+const spiralisBrunvebi = 2;
+const spiralisSichqare = 0.35;
 
-//progress = 0 ნიშნავს სპირალის დასაწყისს, progress = 1მის ზედა ბოლოს
+//gavliliNawili = 0 ნიშნავს სპირალის დასაწყისს, gavliliNawili = 1მის ზედა ბოლოს
 //ამავე ფორმულით ვხატავთ ტრაექტორიას და ვამოძრავებთ კონუსს
-function setSpiralPosition(position, progress) {
-  const angle = progress * Math.PI * 2 * spiralTurns;
-  position.set(
-    spiralCenter.x + spiralRadius * Math.cos(angle),
-    spiralCenter.y + spiralHeight * progress,
-    spiralCenter.z + spiralRadius * Math.sin(angle)
+function setSpiralPosition(pozicia, gavliliNawili) {
+  const kutxe = gavliliNawili * Math.PI * 2 * spiralisBrunvebi;
+  pozicia.set(
+    spiralisCentri.x + spiralisRadiusi * Math.cos(kutxe),
+    spiralisCentri.y + spiralisSimagle * gavliliNawili,
+    spiralisCentri.z + spiralisRadiusi * Math.sin(kutxe)
   );
 }
 
 //ფერადი ხაზები გვიჩვენებს თითოეული ფიგურის მოძრაობის გზას
-function addTrajectory(points, color) {
-  const geometry = new THREE.BufferGeometry().setFromPoints(points);
-  const material = new THREE.LineBasicMaterial({
-    color: color,
+function addTrajectory(certilebi, feri) {
+  const geometria = new THREE.BufferGeometry().setFromPoints(certilebi);
+  const masala = new THREE.LineBasicMaterial({
+    color: feri,
     transparent: true,
     opacity: 0.5
   });
-  scene.add(new THREE.Line(geometry, material));
+  scena.add(new THREE.Line(geometria, masala));
 }
 
 addTrajectory([
-  new THREE.Vector3(-lineHalfLength, lineHeight, lineZ),
-  new THREE.Vector3(lineHalfLength, lineHeight, lineZ)
+  new THREE.Vector3(-xazisNaxevari, xazisSimagle, xazisZ),
+  new THREE.Vector3(xazisNaxevari, xazisSimagle, xazisZ)
 ], 0x60a5fa);
 
-const circlePoints = [];
-const spiralPoints = [];
-const segments = 200;
-for (let i = 0; i <= segments; i += 1) {
-  const progress = i / segments;
-  const angle = progress * Math.PI * 2;
-  circlePoints.push(new THREE.Vector3(
-    circleCenter.x + circleRadius * Math.cos(angle),
-    circleCenter.y,
-    circleCenter.z + circleRadius * Math.sin(angle)
+const criscertilebi = [];
+const spiraliscertilebi = [];
+const monakvetebi = 200;
+for (let nomeri = 0; nomeri <= monakvetebi; nomeri += 1) {
+  const gavliliNawili = nomeri / monakvetebi;
+  const kutxe = gavliliNawili * Math.PI * 2;
+  criscertilebi.push(new THREE.Vector3(
+    crisCentri.x + crisRadiusi * Math.cos(kutxe),
+    crisCentri.y,
+    crisCentri.z + crisRadiusi * Math.sin(kutxe)
   ));
 
-  const point = new THREE.Vector3();
-  setSpiralPosition(point, progress);
-  spiralPoints.push(point);
+  const wertili = new THREE.Vector3();
+  setSpiralPosition(wertili, gavliliNawili);
+  spiraliscertilebi.push(wertili);
 }
-addTrajectory(circlePoints, 0xf472b6);
-addTrajectory(spiralPoints, 0xfbbf24);
+addTrajectory(criscertilebi, 0xf472b6);
+addTrajectory(spiraliscertilebi, 0xfbbf24);
 
 //პოზიციებს ვანგარიშობთ გასული დროით (წამებში)
-function updatePositions(time) {
+function updatePositions(dro) {
   //siიცვლება -1-დან 1-მდე კუბი X-ზე მიდის წინ და უკან
   //Y და Z უცვლელია, ამიტომ მოძრაობის გზა სწორი ხაზია
-  cube.position.set(
-    Math.sin(time * lineSpeed) * lineHalfLength,
-    lineHeight,
-    lineZ
+  kubi.position.set(
+    Math.sin(dro * xazisSichqare) * xazisNaxevari,
+    xazisSimagle,
+    xazisZ
   );
 
   //cos და sin ერთად წრიულ მოძრაობას ქმნის XZ სიბრტყეში
-  const circleAngle = time * circleSpeed;
-  sphere.position.set(
-    circleCenter.x + circleRadius * Math.cos(circleAngle),
-    circleCenter.y,
-    circleCenter.z + circleRadius * Math.sin(circleAngle)
+  const crisKutxe = dro * crisSichqare;
+  spero.position.set(
+    crisCentri.x + crisRadiusi * Math.cos(crisKutxe),
+    crisCentri.y,
+    crisCentri.z + crisRadiusi * Math.sin(crisKutxe)
   );
 
-  //progress რბილად იცვლება 0-დან 1მდე და უკან
+  //gavliliNawili რბილად იცვლება 0-დან 1მდე და უკან
   //კონუსი იმავე სპირალს აუყვება და ჩამოუყვება, ადგილზე გადახტომის გარეშე
-  const spiralProgress = (1 - Math.cos(time * spiralSpeed)) / 2;
-  setSpiralPosition(cone.position, spiralProgress);
+  const spiralisNawili = (1 - Math.cos(dro * spiralisSichqare)) / 2;
+  setSpiralPosition(konusi.position, spiralisNawili);
 }
 
 //requestAnimationFrame გვაძლევს დროს მილიწამებში
-//დროის გამოყენებით მოძრაობის სიჩქარე კადრების რაოდენობაზე დამოკიდებული არ არის
-let startTime = null;
+let dawyebisDro = null;
 
-function animate(timestamp) {
-  if (startTime === null) startTime = timestamp;
-  const time = (timestamp - startTime) / 1000;
+function animate(kadrisDro) {
+  if (dawyebisDro === null) dawyebisDro = kadrisDro;
+  const dro = (kadrisDro - dawyebisDro) / 1000;
 
-  updatePositions(time);
-  controls.update();
-  renderer.render(scene, camera);
+  updatePositions(dro);
+  kontroli.update();
+  rend.render(scena, kamera);
   requestAnimationFrame(animate);
 }
 requestAnimationFrame(animate);
 
 //ფანჯრის ზომის ცვლილება.
 window.addEventListener("resize", () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  kamera.aspect = window.innerWidth / window.innerHeight;
+  kamera.updateProjectionMatrix();
+  rendereri.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  rendereri.setSize(window.innerWidth, window.innerHeight);
 });
