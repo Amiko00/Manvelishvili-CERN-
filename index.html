@@ -3,60 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Task 5</title>
+  <title>Task 6</title>
   <link rel="icon" href="data:," />
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; overflow: hidden; background: #111827; color: #f3f4f6; font-family: Arial, sans-serif; }
     canvas { display: block; touch-action: none; }
     .info { position: fixed; top: 24px; left: 24px; right: 24px; pointer-events: none; }
-    h1 { margin: 0 0 12px; font-size: 28px; }
-    .status { position: fixed; left: 24px; bottom: 24px; margin: 0; color: #cbd5e1; font-size: 13px; pointer-events: none; }
-    .panel { position: fixed; right: 24px; bottom: 24px; width: 320px; max-height: 48vh; overflow: auto; padding: 22px; border: 1px solid #475569; border-top: 3px solid #a78bfa; border-radius: 14px; background: rgba(15, 23, 42, 0.96); box-shadow: 0 16px 48px #0006; }
-    [hidden] { display: none !important; }
-    .panel h2 { margin: 5px 36px 20px 0; font-size: 22px; }
-    .label { margin: 0; color: #a78bfa; font-size: 11px; letter-spacing: 1px; }
-    .close { position: absolute; top: 14px; right: 14px; width: 32px; height: 32px; border: 1px solid #475569; border-radius: 8px; color: #e2e8f0; background: #1e293b; font-size: 22px; cursor: pointer; }
-    .close:hover { background: #334155; }
-    .close:focus-visible { outline: 2px solid #a78bfa; outline-offset: 3px; }
-    dl { display: grid; grid-template-columns: auto 1fr; gap: 13px 16px; margin: 0; font-size: 13px; }
-    dt { color: #94a3b8; }
-    dd { margin: 0; text-align: right; color: #f1f5f9; font-variant-numeric: tabular-nums; }
-    .hint { margin: 20px 0 0; padding-top: 14px; border-top: 1px solid #334155; color: #94a3b8; font-size: 11px; line-height: 1.6; }
+    h1 { margin: 0; font-size: 28px; }
+    .status { position: fixed; left: 24px; right: 24px; bottom: 24px; margin: 0; color: #cbd5e1; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; pointer-events: none; }
     @media (max-width: 600px) {
       .info { top: 18px; left: 16px; right: 16px; }
       h1 { font-size: 23px; }
-      .status { left: 16px; bottom: 18px; font-size: 12px; }
-      .panel { left: 16px; right: 16px; bottom: 52px; width: auto; padding: 18px; }
-      .panel h2 { margin-bottom: 16px; font-size: 20px; }
-      dl { gap: 10px 12px; font-size: 12px; }
-      .hint { margin-top: 14px; padding-top: 10px; }
+      .status { left: 16px; right: 16px; bottom: 18px; font-size: 12px; }
     }
   </style>
 </head>
 <body>
-  <header class="info">
-    <h1>აირჩიე კუბი</h1>
-  </header>
-
-  <p id="mdgomareoba" class="status" role="status">მონიშნული კუბი: არცერთი</p>
-
-  <section id="fanjara" class="panel" role="dialog" aria-labelledby="saxeli" hidden>
-    <button id="daxurva" class="close" type="button" aria-label="მონიშვნის მოხსნა და ფანჯრის დახურვა">×</button>
-    <p class="label">მონიშნული ობიექტი</p>
-    <h2 id="saxeli"></h2>
-    <dl>
-      <dt>ფორმა</dt><dd>კუბი</dd>
-      <dt>ზომა (X × Y × Z)</dt><dd id="zoma"></dd>
-      <dt>მდებარეობა (X, Y, Z)</dt><dd id="mdebareoba"></dd>
-      <dt>სამკუთხედები</dt><dd id="samkutxedebi"></dd>
-    </dl>
-    <p class="hint">მონიშვნის მოსახსნელად დააჭირე Esc-ს ან სცენის ცარიელ ადგილს.</p>
-  </section>
-
-  <!-- Three.js და OrbitControls ერთი და იმავე r128 ვერსიიდან იტვირთება -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <header class="info"><h1>აირჩიე ობიექტი</h1></header>
+  <p id="mdgomareoba" class="status" role="status">მოდელები იტვირთება…</p>
+  <!-- ბიბლიოთეკები ადგილობრივი საქაღალდიდან იტვირთება და ყველა r128 ვერსიისაა -->
+  <script src="./libs/three.min.js"></script>
+  <script src="./libs/OrbitControls.js"></script>
+  <script src="./libs/GLTFLoader.js"></script>
   <script src="./main.js"></script>
 </body>
 </html>
