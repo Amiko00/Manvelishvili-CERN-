@@ -97,9 +97,11 @@ anotaciisJgufi.add(anotacia, anotaciisXazi);
 anotaciisJgufi.visible = false;
 scena.add(anotaciisJgufi);
 const anotaciisPozicia = new THREE.Vector3();
+const anotaciisSamagri = new THREE.Vector3();
+const kamerisZevit = new THREE.Vector3();
 
 
-function anotaciisSheqmna(modeli) {
+function anotaciisSheqmna(modeli, certili) {
   // ტექსტი ტექსტურად იხატება და მხოლოდ მონიშნული მოდელის სახელს აჩვენებს
   anotaciisKonteqsti.font = '600 28px Arial';
   anotaciisTilo.width = Math.ceil(anotaciisKonteqsti.measureText(modeli.name).width) + 48;
@@ -122,17 +124,9 @@ function anotaciisSheqmna(modeli) {
   anotaciisTeqstura.needsUpdate = true;
 
 
-//მოდელის ზედა წერტილი და წარწერა ხაზით უკავშირდება ერთმანეთს
-  const sazgvrebi = new THREE.Box3().setFromObject(modeli);
-  const centri = sazgvrebi.getCenter(new THREE.Vector3());
-  const samagri = new THREE.Vector3(centri.x, sazgvrebi.max.y, centri.z);
-  anotacia.position.copy(samagri);
-  anotacia.position.y += scenisRadiusi * 0.16;
-  const certilebi = anotaciisXazi.geometry.attributes.position;
-  certilebi.setXYZ(0, samagri.x, samagri.y, samagri.z);
-  certilebi.setXYZ(1, anotacia.position.x, anotacia.position.y, anotacia.position.z);
-  certilebi.needsUpdate = true;
-  anotaciisXazi.geometry.computeBoundingSphere();
+  // წარწერა მოდელის ზედაპირზე დაჭერილ წერტილს მიებმება
+  anotaciisSamagri.copy(certili);
+  anotacia.position.copy(anotaciisSamagri);
   anotaciisJgufi.visible = true;
 }
 
@@ -141,10 +135,18 @@ function anotaciisZomisGanaxleba() {
 
   // წარწერა მიახლოებისა და დაშორების დროსაც წაკითხვად ზომას ინარჩუნებს ან უ მებისმიერი მიმართელებიდან შეიძლება მისი წაკითხვა
   kamera.updateMatrixWorld();
-  anotaciisPozicia.copy(anotacia.position).applyMatrix4(kamera.matrixWorldInverse);
+  anotaciisPozicia.copy(anotaciisSamagri).applyMatrix4(kamera.matrixWorldInverse);
   const sigrme = Math.max(0.01, -anotaciisPozicia.z);
   const ertPiqselze = 2 * sigrme * Math.tan(THREE.MathUtils.degToRad(kamera.fov / 2))
     / window.innerHeight;
+  // მოკლე ხაზი ეკრანზე  პიქსელს ინარჩუნებს კამერის მიახლოების დროსაც
+  kamerisZevit.set(0, 1, 0).applyQuaternion(kamera.quaternion);
+  anotacia.position.copy(anotaciisSamagri).addScaledVector(kamerisZevit, 8 * ertPiqselze);
+  const certilebi = anotaciisXazi.geometry.attributes.position;
+  certilebi.setXYZ(0, anotaciisSamagri.x, anotaciisSamagri.y, anotaciisSamagri.z);
+  certilebi.setXYZ(1, anotacia.position.x, anotacia.position.y, anotacia.position.z);
+  certilebi.needsUpdate = true;
+  anotaciisXazi.geometry.computeBoundingSphere();
   const sigane = Math.min(anotaciisTilo.width * 0.7, 340, window.innerWidth - 32);
   anotacia.scale.set(
     sigane * ertPiqselze,
@@ -173,7 +175,7 @@ function monishvnisMoxsna() {
   if (mzadaa) mdgomareoba.textContent = 'მონიშნული ობიექტი: არცერთი';
 }
 
-function modelisMonishvna(modeli) {
+function modelisMonishvna(modeli, certili) {
   monishvnisMoxsna();
   monishnuliModeli = modeli;
 
@@ -188,7 +190,7 @@ function modelisMonishvna(modeli) {
       chanaweri.masala.clearcoat = 0;
     }
   });
-  anotaciisSheqmna(modeli);
+  anotaciisSheqmna(modeli, certili);
   anotaciisZomisGanaxleba();
   mdgomareoba.textContent = modeli.name;
 }
@@ -278,7 +280,7 @@ async function modelebisChatvirtva() {
     mzadaa = true;
     mdgomareoba.textContent = 'მონიშნული ობიექტი: არცერთი';
   } catch (shecdoma) {
-    mdgomareoba.textContent = 'მოდელები ვერ ჩაიტვირთა ამიტომაც გახსენი index.html Live Server-ით და გადაამოწმე models საქაღალდე';
+    mdgomareoba.textContent = 'მოდელები ვერ ჩაიტვირთა ამიტომაც გახსენი index.html live Server-ით და გადაამოწმე models საქაღალდე';
     console.error('მოდელების ჩატვირთვის შეცდომა', shecdoma);
   }
 }
@@ -301,7 +303,11 @@ function modelisPovna(movlena) {
   kamera.updateMatrixWorld();
   sxivi.setFromCamera(mausisPozicia, kamera);
   const shejaxebebi = sxivi.intersectObjects(mosanishniNawilebi, false);
-  return shejaxebebi.length ? shejaxebebi[0].object.userData.modeli : null;
+  if (!shejaxebebi.length) return null;
+  return {
+    modeli: shejaxebebi[0].object.userData.modeli,
+    certili: shejaxebebi[0].point
+  };
 }
 
 
@@ -325,7 +331,7 @@ rendereri.domElement.addEventListener('pointerdown', function (movlena) {
     nomeri: movlena.pointerId,
     x: movlena.clientX,
     y: movlena.clientY,
-    modeli: modelisPovna(movlena),
+    modeli: modelisPovna(movlena)?.modeli || null,
     gadatreulia: false
   };
 
@@ -359,10 +365,11 @@ window.addEventListener('pointerup', function (movlena) {
   const gadadgileba = Math.hypot(movlena.clientX - dachera.x, movlena.clientY - dachera.y);
   if (gadadgileba > gadatrevisZgvari) return;
 
-  const modeli = modelisPovna(movlena);
+  const shejaxeba = modelisPovna(movlena);
+  const modeli = shejaxeba ? shejaxeba.modeli : null;
   if (modeli !== dachera.modeli) return;
 
-  if (modeli) modelisMonishvna(modeli);
+  if (modeli) modelisMonishvna(modeli, shejaxeba.certili);
     
   else monishvnisMoxsna();
 });
