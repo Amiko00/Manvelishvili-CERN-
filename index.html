@@ -2,30 +2,44 @@
 <html lang="ka">
 <head>
   <meta charset="UTF-8" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Task 6</title>
+  
+  <title>Task 7</title>
+
   <link rel="icon" href="data:," />
+
   <style>
     * { box-sizing: border-box; }
+
     body { margin: 0; overflow: hidden; background: #111827; color: #f3f4f6; font-family: Arial, sans-serif; }
     canvas { display: block; touch-action: none; }
-    .info { position: fixed; top: 24px; left: 24px; right: 24px; pointer-events: none; }
-    h1 { margin: 0; font-size: 28px; }
-    .status { position: fixed; left: 24px; right: 24px; bottom: 24px; margin: 0; color: #cbd5e1; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; pointer-events: none; }
+
+    h1 { position: fixed; top: 24px; left: 24px; right: 24px; margin: 0; font-size: 28px; pointer-events: none; }
+    .status { position: fixed; left: 24px; right: 24px; bottom: 58px; margin: 0; color: #cbd5e1; font-size: 13px; line-height: 1.6; pointer-events: none; }
+    .credit { position: fixed; left: 24px; bottom: 24px; margin: 0; color: #94a3b8; font-size: 12px; }
+    a { color: #b7cff3; text-decoration: none; }
+
+    a:hover { text-decoration: underline; }
+
+    a:focus-visible { outline: 2px solid #93c5fd; outline-offset: 4px; }
+    [hidden] { display: none !important; }
+
     @media (max-width: 600px) {
-      .info { top: 18px; left: 16px; right: 16px; }
-      h1 { font-size: 23px; }
-      .status { left: 16px; right: 16px; bottom: 18px; font-size: 12px; }
+      h1 { top: 18px; left: 16px; right: 16px; font-size: 22px; }
+      .status { left: 16px; right: 16px; }
+      .credit { left: 16px; bottom: 18px; font-size: 11px; }
     }
   </style>
 </head>
 <body>
-  <header class="info"><h1>აირჩიე ობიექტი</h1></header>
-  <p id="mdgomareoba" class="status" role="status">მოდელები იტვირთება…</p>
-  <!-- ბიბლიოთეკები ადგილობრივი საქაღალდიდან იტვირთება და ყველა r128 ვერსიისაა -->
+  <h1>ფოტო ფიგურაზე</h1>
+  <p id="mdgomareoba" class="status" role="status">ფოტო იტვირთება…</p>
+  <p class="credit">ფოტო: <a href="https://science.nasa.gov/resource/the-blue-marble/" target="_blank" rel="noopener noreferrer">NASA · Blue Marble</a></p>
+
+  <!-- ბიბლიოთეკები ადგილობრივი საქაღალდიდან იტვირთება -->
   <script src="./libs/three.min.js"></script>
   <script src="./libs/OrbitControls.js"></script>
-  <script src="./libs/GLTFLoader.js"></script>
   <script src="./main.js"></script>
 </body>
 </html>

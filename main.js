@@ -1,419 +1,124 @@
 // სცენა, კამერა და რენდერერი
 const mdgomareoba = document.getElementById('mdgomareoba');
+
 const scena = new THREE.Scene();
+
 scena.background = new THREE.Color(0x111827);
+
+
+
 const kamera = new THREE.PerspectiveCamera(
-  50, window.innerWidth / window.innerHeight, 0.01, 1000
+  50, window.innerWidth / window.innerHeight, 0.1, 100
+
 );
-kamera.position.set(7, 4, 9);
+
+
+const mandzili = window.innerWidth < 600 ? 13 : 9;
+
+kamera.position.set(1, 0.7, 1.4).normalize().multiplyScalar(mandzili);
+
+kamera.position.y += 1.8;
+
+
 
 const rendereri = new THREE.WebGLRenderer({ antialias: true });
 rendereri.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 rendereri.setSize(window.innerWidth, window.innerHeight);
 rendereri.outputEncoding = THREE.sRGBEncoding;
-rendereri.toneMapping = THREE.ACESFilmicToneMapping;
 document.body.appendChild(rendereri.domElement);
 
-
+// orbitcontrols საშუალებას გვაძლევს პირამიდა სხვადასხვა მხრიდან დავათვალიეროთ
 const kontroli = new THREE.OrbitControls(kamera, rendereri.domElement);
+kontroli.target.set(0, 1.8, 0);
 kontroli.enableDamping = true;
 kontroli.dampingFactor = 0.05;
+kontroli.minDistance = 4;
+kontroli.maxDistance = 25;
 kontroli.update();
 
-
-
-
-scena.add(new THREE.HemisphereLight(0xffffff, 0x607080, 1.1));
-
-const sinatle = new THREE.DirectionalLight(0xffffff, 1.1);
-sinatle.position.set(4, 7, 6);
+scena.add(new THREE.AmbientLight(0xffffff, 0.7));
+const sinatle = new THREE.DirectionalLight(0xffffff, 0.6);
+sinatle.position.set(4, 7, 5);
 scena.add(sinatle);
 
-const meoreSinatle = new THREE.DirectionalLight(0xc4d5ff, 0.6);
-meoreSinatle.position.set(-5, 3, -5);
-scena.add(meoreSinatle);
+const bade = new THREE.GridHelper(14, 14, 0x475569, 0x273449);
+scena.add(bade);
 
-// საერთო ჯგუფი ინარჩუნებს სამი ფაილის ერთმანეთის მიმართ მდებარეობასა და მასშტაბს
-const deteqtori = new THREE.Group();
-
-
-scena.add(deteqtori);
-const modelebi = [];
-
-
-const mosanishniNawilebi = [];
-
-const monishvnisFeri = new THREE.Color(0xff2424).convertSRGBToLinear();
-
-
-let monishnuliModeli = null;
-let scenisRadiusi = 3;
-let mzadaa = false;
-
-
-const failebi = [
-
-  { misamarti: './models/1.glb', saxeli: 'ITK-Strip/Barrel' },
-  { misamarti: './models/2.glb', saxeli: 'ITK-Pixel-Outer-Endcap-SideC' },
-  { misamarti: './models/3.glb', saxeli: 'ITK-Pixel-Outer-Endcap-SideA' }
-];
-
-// ანოტაცია რეალური 3D Sprite ია და კამერისკენ იყურება
-const anotaciisTilo = document.createElement('canvas');
-
-const anotaciisKonteqsti = anotaciisTilo.getContext('2d');
-
-const anotaciisTeqstura = new THREE.CanvasTexture(anotaciisTilo);
-
-
-anotaciisTeqstura.encoding = THREE.sRGBEncoding;
-
-anotaciisTeqstura.minFilter = THREE.LinearFilter;
-
-
-anotaciisTeqstura.generateMipmaps = false;
-
-
-
-const anotacia = new THREE.Sprite(new THREE.SpriteMaterial({
-  map: anotaciisTeqstura,
-  transparent: true,
-  depthTest: false,
-  depthWrite: false,
-  toneMapped: false
-}));
-anotacia.center.set(0.5, 0);
-anotacia.renderOrder = 2;
-
-const anotaciisXazi = new THREE.Line(
-  new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]),
-  new THREE.LineBasicMaterial({ color: 0xff5757, depthTest: false, depthWrite: false })
+// textureloader ფოტოს ფაილიდან ქმნის ტექსტურას
+const chamtvirtveli = new THREE.TextureLoader();
+const teqstura = chamtvirtveli.load(
+  './textures/dedamica.jpg',
+  function () {
+    piramida.visible = true;
+    mdgomareoba.hidden = true;
+  },
+  undefined,
+  function (shecdoma) {
+    mdgomareoba.textContent = 'ფოტო ვერ ჩაიტვირთა ამიტომაც გამოიყენე Live Server და გადაამოწმე textures საქაღალდე';
+    console.error('ფოტოს ჩატვირთვის შეცდომა', shecdoma);
+  }
 );
 
+// sRGB ფოტოს ფერების სწორად ჩვენებისთვის გვჭირდება
+teqstura.encoding = THREE.sRGBEncoding;
+teqstura.anisotropy = Math.min(8, rendereri.capabilities.getMaxAnisotropy());
 
-anotaciisXazi.renderOrder = 1;
-const anotaciisJgufi = new THREE.Group();
-anotaciisJgufi.add(anotacia, anotaciisXazi);
-anotaciisJgufi.visible = false;
-scena.add(anotaciisJgufi);
-const anotaciisPozicia = new THREE.Vector3();
-const anotaciisSamagri = new THREE.Vector3();
-const kamerisZevit = new THREE.Vector3();
+// ოთხსეგმენტიანი კონუსი კვადრატული ფუძის მქონე პირამიდას ქმნის
+const geometria = new THREE.ConeGeometry(2.3, 3.6, 4).toNonIndexed();
+geometria.computeVertexNormals();
 
+// თითოეულ სამკუთხა გვერდზე ფოტო ცალ-ცალკე თავსდება
+const koordinatebi = geometria.attributes.uv;
+for (let gverdi = 0; gverdi < 4; gverdi++) {
+  const dasawyisi = gverdi * 6;
 
-function anotaciisSheqmna(modeli, certili) {
-  // ტექსტი ტექსტურად იხატება და მხოლოდ მონიშნული მოდელის სახელს აჩვენებს
-  anotaciisKonteqsti.font = '600 28px Arial';
-  anotaciisTilo.width = Math.ceil(anotaciisKonteqsti.measureText(modeli.name).width) + 48;
-  anotaciisTilo.height = 72;
-  anotaciisKonteqsti.fillStyle = '#0f172a';
-  anotaciisKonteqsti.fillRect(0, 0, anotaciisTilo.width, anotaciisTilo.height);
-  anotaciisKonteqsti.strokeStyle = '#ff5757';
-  anotaciisKonteqsti.lineWidth = 3;
+  koordinatebi.setXY(dasawyisi, 0.5, 1);
+  koordinatebi.setXY(dasawyisi + 1, 0, 0);
+  koordinatebi.setXY(dasawyisi + 2, 0.5, 1);
+  koordinatebi.setXY(dasawyisi + 3, 0, 0);
+  koordinatebi.setXY(dasawyisi + 4, 1, 0);
+  koordinatebi.setXY(dasawyisi + 5, 0.5, 1);
 
-  anotaciisKonteqsti.strokeRect(2, 2, anotaciisTilo.width - 4, anotaciisTilo.height - 4);
-  anotaciisKonteqsti.font = '600 28px Arial';
-
-  anotaciisKonteqsti.textAlign = 'center';
-
-
-  anotaciisKonteqsti.textBaseline = 'middle';
-  anotaciisKonteqsti.fillStyle = '#f3f4f6';
-  anotaciisKonteqsti.fillText(modeli.name, anotaciisTilo.width / 2, anotaciisTilo.height / 2);
-
-  anotaciisTeqstura.needsUpdate = true;
-
-
-  // წარწერა მოდელის ზედაპირზე დაჭერილ წერტილს მიებმება
-  anotaciisSamagri.copy(certili);
-  anotacia.position.copy(anotaciisSamagri);
-  anotaciisJgufi.visible = true;
 }
 
-function anotaciisZomisGanaxleba() {
-  if (!anotaciisJgufi.visible) return;
+// map ფოტოს პირამიდის ზედაპირებზე ათავსებს
+const masala = new THREE.MeshLambertMaterial({ map: teqstura });
 
-  // წარწერა მიახლოებისა და დაშორების დროსაც წაკითხვად ზომას ინარჩუნებს ან უ მებისმიერი მიმართელებიდან შეიძლება მისი წაკითხვა
-  kamera.updateMatrixWorld();
-  anotaciisPozicia.copy(anotaciisSamagri).applyMatrix4(kamera.matrixWorldInverse);
-  const sigrme = Math.max(0.01, -anotaciisPozicia.z);
-  const ertPiqselze = 2 * sigrme * Math.tan(THREE.MathUtils.degToRad(kamera.fov / 2))
-    / window.innerHeight;
-  // მოკლე ხაზი ეკრანზე  პიქსელს ინარჩუნებს კამერის მიახლოების დროსაც
-  kamerisZevit.set(0, 1, 0).applyQuaternion(kamera.quaternion);
-  anotacia.position.copy(anotaciisSamagri).addScaledVector(kamerisZevit, 8 * ertPiqselze);
-  const certilebi = anotaciisXazi.geometry.attributes.position;
-  certilebi.setXYZ(0, anotaciisSamagri.x, anotaciisSamagri.y, anotaciisSamagri.z);
-  certilebi.setXYZ(1, anotacia.position.x, anotacia.position.y, anotacia.position.z);
-  certilebi.needsUpdate = true;
-  anotaciisXazi.geometry.computeBoundingSphere();
-  const sigane = Math.min(anotaciisTilo.width * 0.7, 340, window.innerWidth - 32);
-  anotacia.scale.set(
-    sigane * ertPiqselze,
-    sigane * anotaciisTilo.height / anotaciisTilo.width * ertPiqselze,
-    1
-  );
-}
+const piramida = new THREE.Mesh(geometria, masala);
 
-function monishvnisMoxsna() {
+piramida.position.y = 1.8;
 
-  if (monishnuliModeli) {
-    monishnuliModeli.userData.masalebi.forEach(function (chanaweri) {
-      chanaweri.masala.color.copy(chanaweri.feri);
-      chanaweri.masala.roughness = chanaweri.sixorkle;
+piramida.rotation.y = Math.PI / 4;
 
-      chanaweri.masala.metalness = chanaweri.litonuroba;
-      if ('clearcoat' in chanaweri.masala) {
-        chanaweri.masala.clearcoat = chanaweri.laqi;
-      }
+piramida.visible = false;
 
-    });
-  }
-  monishnuliModeli = null;
-  anotaciisJgufi.visible = false;
+scena.add(piramida);
 
-  if (mzadaa) mdgomareoba.textContent = 'მონიშნული ობიექტი: არცერთი';
-}
+// წვრილი კონტური ფოტოს მუქ ფონზეც გამოკვეთს პირამიდის კიდეებს
+const konturi = new THREE.LineSegments(
 
-function modelisMonishvna(modeli, certili) {
-  monishvnisMoxsna();
-  monishnuliModeli = modeli;
+  new THREE.EdgesGeometry(geometria),
+  new THREE.LineBasicMaterial({ color: 0x64748b })
 
-  modeli.userData.masalebi.forEach(function (chanaweri) {
-    // მკვეთრი წითელი და ნაკლები ბზინვარება მონიშვნას უკეთ გამოაჩენს
-    chanaweri.masala.color.copy(monishvnisFeri);
-    chanaweri.masala.roughness = 1;
+);
+piramida.add(konturi);
 
-    chanaweri.masala.metalness = 0;
-    if ('clearcoat' in chanaweri.masala) {
-
-      chanaweri.masala.clearcoat = 0;
-    }
-  });
-  anotaciisSheqmna(modeli, certili);
-  anotaciisZomisGanaxleba();
-  mdgomareoba.textContent = modeli.name;
-}
-
-function xedzeMorgeba() {
-  const vertikaluriKutxe = THREE.MathUtils.degToRad(kamera.fov / 2);
-
-  const horizontaluriKutxe = Math.atan(Math.tan(vertikaluriKutxe) * kamera.aspect);
-
-  const mandzili = scenisRadiusi / Math.sin(Math.min(vertikaluriKutxe, horizontaluriKutxe)) * 1.3;
-
-  const mimartuleba = kamera.position.clone().sub(kontroli.target).normalize();
-
-
-  kontroli.target.set(0, 0, 0);
-  kamera.position.copy(mimartuleba.multiplyScalar(mandzili));
-  kontroli.minDistance = scenisRadiusi * 0.5;
-  kontroli.maxDistance = scenisRadiusi * 12;
-  kontroli.update();
-}
-
-// GLTF loader თითოეულ GLB ფაილს თავისი შიდა გეომეტრიებით ტვირთავს
-const chamtvirtveli = new THREE.GLTFLoader();
-let chatvirtuliRaodenoba = 0;
-
-async function modelebisChatvirtva() {
-  try {
-    const shedegebi = await Promise.allSettled(failebi.map(async function (faili) {
-      const monacemebi = await chamtvirtveli.loadAsync(faili.misamarti);
-      const modeli = monacemebi.scene;
-      modeli.name = faili.saxeli;
-      modeli.userData.masalebi = [];
-
-      modeli.traverse(function (nawili) {
-
-        if (!nawili.isMesh) return;
-
-        // შიდა ნაწილის არჩევა მთელ იმპორტირებულ მოდელს მონიშნავს
-        nawili.userData.modeli = modeli;
-        mosanishniNawilebi.push(nawili);
-        const masalebi = Array.isArray(nawili.material) ? nawili.material : [nawili.material];
-        const axaliMasalebi = masalebi.map(function (masala) {
-          const axaliMasala = masala.clone();
-
-
-          modeli.userData.masalebi.push({
-            masala: axaliMasala,
-            feri: axaliMasala.color.clone(),
-            sixorkle: axaliMasala.roughness,
-            litonuroba: axaliMasala.metalness,
-            laqi: axaliMasala.clearcoat
-          });
-
-
-          return axaliMasala;
-        });
-        nawili.material = Array.isArray(nawili.material) ? axaliMasalebi : axaliMasalebi[0];
-      });
-
-
-
-      modelebi.push(modeli);
-      deteqtori.add(modeli);
-      chatvirtuliRaodenoba++;
-      mdgomareoba.textContent = 'მოდელები იტვირთება: ' + chatvirtuliRaodenoba + '/3';
-    }));
-
-    const shecdoma = shedegebi.find(function (shedegi) {
-      return shedegi.status === 'rejected';
-    });
-    if (shecdoma) throw shecdoma.reason;
-
-    // მხოლოდ მთელ ჯგუფს ვაცენტრებთ და ნაწილების ურთიერთმდებარეობას არ ვცვლით
-    const sazgvrebi = new THREE.Box3().setFromObject(deteqtori);
-    const centri = sazgvrebi.getCenter(new THREE.Vector3());
-    deteqtori.position.sub(centri);
-    deteqtori.updateMatrixWorld(true);
-    sazgvrebi.setFromObject(deteqtori);
-    scenisRadiusi = sazgvrebi.getBoundingSphere(new THREE.Sphere()).radius;
-
-
-
-    const bade = new THREE.GridHelper(12, 24, 0x475569, 0x273449);
-    bade.position.y = sazgvrebi.min.y - 0.12;
-    scena.add(bade);
-    xedzeMorgeba();
-    mzadaa = true;
-    mdgomareoba.textContent = 'მონიშნული ობიექტი: არცერთი';
-  } catch (shecdoma) {
-    mdgomareoba.textContent = 'მოდელები ვერ ჩაიტვირთა ამიტომაც გახსენი index.html live Server-ით და გადაამოწმე models საქაღალდე';
-    console.error('მოდელების ჩატვირთვის შეცდომა', shecdoma);
-  }
-}
-
-
-
-const sxivi = new THREE.Raycaster();
-const mausisPozicia = new THREE.Vector2();
-
-function modelisPovna(movlena) {
-  if (!mzadaa) return null;
-  const sazgvrebi = rendereri.domElement.getBoundingClientRect();
-  mausisPozicia.x = ((movlena.clientX - sazgvrebi.left) / sazgvrebi.width) * 2 - 1;
-  mausisPozicia.y = -((movlena.clientY - sazgvrebi.top) / sazgvrebi.height) * 2 + 1;
-  if (Math.abs(mausisPozicia.x) > 1 || Math.abs(mausisPozicia.y) > 1) return null;
-
-
-
-  scena.updateMatrixWorld(true);
-  kamera.updateMatrixWorld();
-  sxivi.setFromCamera(mausisPozicia, kamera);
-  const shejaxebebi = sxivi.intersectObjects(mosanishniNawilebi, false);
-  if (!shejaxebebi.length) return null;
-  return {
-    modeli: shejaxebebi[0].object.userData.modeli,
-    certili: shejaxebebi[0].point
-  };
-}
-
-
-
-// გადათრევა და რამდენიმე თითით შეხება ჩვეულებრივ დაჭერად არ ჩაითვალოს
-let dacherisDasawyisi = null;
-const aqtiuriTitebi = new Set();
-const gadatrevisZgvari = 6;
-
-rendereri.domElement.addEventListener('pointerdown', function (movlena) {
-  aqtiuriTitebi.add(movlena.pointerId);
-  if (aqtiuriTitebi.size !== 1 || movlena.button !== 0
-      || movlena.ctrlKey || movlena.metaKey || movlena.shiftKey) {
-    dacherisDasawyisi = null;
-    return;
-  }
-
-
-
-  dacherisDasawyisi = {
-    nomeri: movlena.pointerId,
-    x: movlena.clientX,
-    y: movlena.clientY,
-    modeli: modelisPovna(movlena)?.modeli || null,
-    gadatreulia: false
-  };
-
-});
-
-window.addEventListener('pointermove', function (movlena) {
-
-  if (!dacherisDasawyisi || dacherisDasawyisi.nomeri !== movlena.pointerId) return;
-
-  const gadadgileba = Math.hypot(
-    movlena.clientX - dacherisDasawyisi.x,
-
-    movlena.clientY - dacherisDasawyisi.y
-
-  );
-
-  if (gadadgileba > gadatrevisZgvari) dacherisDasawyisi.gadatreulia = true;
-});
-
-window.addEventListener('pointerup', function (movlena) {
-  aqtiuriTitebi.delete(movlena.pointerId);
-  if (!dacherisDasawyisi || dacherisDasawyisi.nomeri !== movlena.pointerId) return;
-
-  const dachera = dacherisDasawyisi;
-
-
-  dacherisDasawyisi = null;
-  if (dachera.gadatreulia || movlena.button !== 0
-      || movlena.target !== rendereri.domElement) return;
-
-  const gadadgileba = Math.hypot(movlena.clientX - dachera.x, movlena.clientY - dachera.y);
-  if (gadadgileba > gadatrevisZgvari) return;
-
-  const shejaxeba = modelisPovna(movlena);
-  const modeli = shejaxeba ? shejaxeba.modeli : null;
-  if (modeli !== dachera.modeli) return;
-
-  if (modeli) modelisMonishvna(modeli, shejaxeba.certili);
-    
-  else monishvnisMoxsna();
-});
-
-window.addEventListener('pointercancel', function (movlena) {
-
-  aqtiuriTitebi.delete(movlena.pointerId);
-  dacherisDasawyisi = null;
-});
-
-window.addEventListener('blur', function () {
-
-  // თუ ფანჯარა დაკეტილია, ყველა მომხმარებელის მიერ დაწყებული ქმედებები უნდა გაუქმდეს
-
-aqtiuriTitebi.clear();
-  dacherisDasawyisi = null;
-});
-
-
-window.addEventListener('keydown', function (movlena) {
-  if (movlena.key === 'Escape') {
-    dacherisDasawyisi = null;
-    monishvnisMoxsna();
-  }
-});
-// ფანჯრის ზომის ცვლილებისას სამივე მოდელი ხედში დარჩეს
 window.addEventListener('resize', function () {
+
   kamera.aspect = window.innerWidth / window.innerHeight;
   kamera.updateProjectionMatrix();
-
   rendereri.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   rendereri.setSize(window.innerWidth, window.innerHeight);
 
-  if (mzadaa) xedzeMorgeba();
 });
 
 function animacia() {
+
   requestAnimationFrame(animacia);
   kontroli.update();
-
-  anotaciisZomisGanaxleba();
-
   rendereri.render(scena, kamera);
-}
 
+}
 animacia();
-modelebisChatvirtva();
+
+
