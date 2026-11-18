@@ -13,12 +13,13 @@
     * { box-sizing: border-box; }
 
     body { margin: 0; overflow: hidden; background: #111827; color: #f3f4f6; font-family: Arial, sans-serif; }
-    canvas { display: block; touch-action: none; }
+    canvas { display: block; touch-action: none; cursor: grab; }
+    canvas:active { cursor: grabbing; }
 
-    h1 { position: fixed; top: 24px; left: 24px; right: 24px; margin: 0; font-size: 28px; pointer-events: none; }
+    h1 { position: fixed; top: 24px; left: 24px; right: 24px; margin: 0; font-size: 28px; pointer-events: none; text-shadow: 0 2px 8px #000; }
     .status { position: fixed; left: 24px; right: 24px; bottom: 58px; margin: 0; color: #cbd5e1; font-size: 13px; line-height: 1.6; pointer-events: none; }
-    .credit { position: fixed; left: 24px; bottom: 24px; margin: 0; color: #94a3b8; font-size: 12px; }
-    a { color: #b7cff3; text-decoration: none; }
+    .credit { position: fixed; left: 24px; bottom: 24px; margin: 0; padding: 6px 10px; border-radius: 4px; background: #111827cc; color: #e2e8f0; font-size: 12px; }
+    a { color: #dbeafe; text-decoration: none; }
 
     a:hover { text-decoration: underline; }
 
@@ -33,9 +34,9 @@
   </style>
 </head>
 <body>
-  <h1>ფოტო ფიგურაზე</h1>
-  <p id="mdgomareoba" class="status" role="status">ფოტო იტვირთება…</p>
-  <p class="credit">ფოტო: <a href="https://science.nasa.gov/resource/the-blue-marble/" target="_blank" rel="noopener noreferrer">NASA · Blue Marble</a></p>
+  <h1>VR-ის ილუზია</h1>
+  <p id="mdgomareoba" class="status" role="status">ფოტოები იტვირთება…</p>
+  <p class="credit">ფოტოები: <a href="https://www.humus.name/index.php?page=Textures" target="_blank" rel="noopener noreferrer">Humus · Bridge2</a> · <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener noreferrer">CC BY 3.0</a></p>
 
   <!-- ბიბლიოთეკები ადგილობრივი საქაღალდიდან იტვირთება -->
   <script src="./libs/three.min.js"></script>
