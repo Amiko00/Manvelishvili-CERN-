@@ -1,125 +1,126 @@
-// სცენა და კამერა გახსნილი კუბის გარედან დასათვალიერებლად
+
+
+const tilo = document.getElementById('tilo');
+
+const kutxe = document.getElementById('kutxe');
+
+const gradusi = document.getElementById('gradusi');
 const mdgomareoba = document.getElementById('mdgomareoba');
+
 const scena = new THREE.Scene();
 scena.background = new THREE.Color(0x111827);
 
+const xedvisKutxe = 46;
+const kamera = new THREE.PerspectiveCamera(xedvisKutxe, 1, 0.1, 100);
+kamera.position.set(5.5, 3.7, 6.2);
 
-const kamera = new THREE.PerspectiveCamera(
-  50, window.innerWidth / window.innerHeight, 0.1, 100
-);
-
-const dashoreba = window.innerWidth < 600 ? 1.5 : 1;
-kamera.position.set(9 * dashoreba, 3 + 5 * dashoreba, 12 * dashoreba);
-
-
-
-const rendereri = new THREE.WebGLRenderer({ antialias: true });
-rendereri.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-rendereri.setSize(window.innerWidth, window.innerHeight);
+const rendereri = new THREE.WebGLRenderer({ canvas: tilo, antialias: true });
 rendereri.outputEncoding = THREE.sRGBEncoding;
-document.body.appendChild(rendereri.domElement);
 
-// orbitcontol კუბის გარშემო ბრუნვასა და მიახლოებას გვაძლევს
-const kontroli = new THREE.OrbitControls(kamera, rendereri.domElement);
-kontroli.target.set(0, 3, 0);
+// სფეროს მასალაზე სინათლე ზედაპირის დახრილობის მიხედვით ნაწილდება
+const geometria = new THREE.SphereGeometry(1.5, 64, 48);
+
+const masala = new THREE.MeshLambertMaterial();
+
+const spero = new THREE.Mesh(geometria, masala);
+
+spero.position.y = 1.6;
+
+spero.rotation.y = -1.45;
+
+
+scena.add(spero);
+
+// X ღერძი წითელია, Y მწვანე, Z კი ლურჯი
+const gerdzebi = new THREE.AxesHelper(3.55);
+scena.add(gerdzebi);
+
+
+const bade = new THREE.GridHelper(20, 20, 0x475569, 0x273449);
+
+bade.position.y = -0.02;
+scena.add(bade);
+
+// წყაროდან სფეროს ცენტრისკენ მიმართული სხივები ერთმანეთის პარალელურია
+
+const sinatle = new THREE.DirectionalLight(0xffffff, 1.1);
+
+sinatle.target = spero;
+scena.add(sinatle);
+
+const kontroli = new THREE.OrbitControls(kamera, tilo);
+kontroli.target.copy(spero.position);
 kontroli.enableDamping = true;
 kontroli.dampingFactor = 0.05;
 kontroli.rotateSpeed = 0.6;
 kontroli.enablePan = false;
-kontroli.minDistance = 8;
-kontroli.maxDistance = 30;
-kontroli.maxPolarAngle = Math.PI / 2 - 0.05;
+kontroli.minDistance = 3.3;
+kontroli.maxDistance = 14;
 kontroli.update();
 
-const bade = new THREE.GridHelper(20, 20, 0x475569, 0x273449);
-bade.position.y = -0.02;
-scena.add(bade);
-
-// კუბი ფოტოების ჩატვირთვის შემდეგ გამოჩნდება
-let chaitvirtaShecdomit = false;
-const chamotvirtvisMartva = new THREE.LoadingManager();
-chamotvirtvisMartva.onLoad = function () {
-  if (!chaitvirtaShecdomit) {
-    kubi.visible = true;
-    mdgomareoba.hidden = true;
+// ინერციული ბრუნვისას ყოველი ცვლილება შემდეგ კადრს ითხოვს
+let kadri = null;
+function daxatvisMotxovna() {
+  if (kadri === null) {
+    kadri = requestAnimationFrame(daxatva);
   }
-};
-chamotvirtvisMartva.onError = function (misamarti) {
-  chaitvirtaShecdomit = true;
-  mdgomareoba.textContent = 'ფოტოები ვერ ჩაიტვირთა — გამოიყენე Live Server და გადაამოწმე textures/panorama საქაღალდე';
-  console.error('ფოტოს ჩატვირთვის შეცდომა', misamarti);
-};
+}
 
-// რიგი ემთხვევა boxgeometry-ის მხარეებს
-// ამ პანორამის X მხარეები Three.js  ის კოორდინატებისთვის ადგილებს ცვლიან
-// ზედა და წინა მხარეები ღიაა, რადგან შიდა კედლები გარედან გამოჩნდეს
-const fotoebi = [
-  'negx.jpg',
-  'posx.jpg',
-  null,
-  'negy.jpg',
-  null,
-  'negz.jpg'
-];
+function daxatva() {
 
-const chamtvirtveli = new THREE.TextureLoader(chamotvirtvisMartva);
-const masalebi = fotoebi.map(function (faili) {
-  if (faili === null) {
+  kadri = null;
 
-    return new THREE.MeshBasicMaterial({ visible: false });
-  }
-
-  const teqstura = chamtvirtveli.load('./textures/panorama/' + faili);
-  teqstura.encoding = THREE.sRGBEncoding;
-  teqstura.anisotropy = Math.min(8, rendereri.capabilities.getMaxAnisotropy());
-
-
-
-  // ფოტოები კუბის შიგნიდან სწორად უნდა ჩანდეს
-  teqstura.repeat.x = -1;
-  teqstura.offset.x = 1;
-
-
-  // BackSide ტექსტურას შიდა მხარეს აჩვენებს, MeshBasicMaterial განათებას არ საჭიროებს
-  return new THREE.MeshBasicMaterial({ map: teqstura, side: THREE.BackSide });
-});
-
-// ფოტოები სამ შიდა კედელსა და იატაკს ფარავს
-const geometria = new THREE.BoxGeometry(6, 6, 6);
-const kubi = new THREE.Mesh(geometria, masalebi);
-kubi.position.y = 3;
-kubi.visible = false;
-scena.add(kubi);
-
-
-// კონტური ღია მხარეებზეც აჩვენებს კუბის ფორმას
-const konturi = new THREE.LineSegments(
-  new THREE.EdgesGeometry(geometria),
-  new THREE.LineBasicMaterial({ color: 0xb6c7d9 })
-);
-kubi.add(konturi);
-
-
-
-window.addEventListener('resize', function () {
-  
-  kamera.aspect = window.innerWidth / window.innerHeight;
-  kamera.updateProjectionMatrix();
-  rendereri.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  rendereri.setSize(window.innerWidth, window.innerHeight);
-
-});
-
-
-function animacia() {
-
-  requestAnimationFrame(animacia);
   kontroli.update();
 
   rendereri.render(scena, kamera);
 
 }
 
+// სლაიდერი სინათლის წყაროს სფეროს გარშემო გადაადგილებს
+function sinatlisMimartva() {
+  const radiani = THREE.MathUtils.degToRad(kutxe.valueAsNumber);
+  sinatle.position.set(6 * Math.sin(radiani), spero.position.y + 3, 6 * Math.cos(radiani));
+  gradusi.value = kutxe.value + '°';
+  daxatvisMotxovna();
 
+}
 
-animacia();
+function zomisMorgeba() {
+
+  const sigane = tilo.clientWidth;
+  const simagle = tilo.clientHeight;
+  kamera.aspect = sigane / simagle;
+  // ვიწრო ეკრანზეც სფერო მთლიანად ეტევა საწყის ხედში
+  const naxevariKutxe = THREE.MathUtils.degToRad(xedvisKutxe / 2);
+  kamera.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(naxevariKutxe) / Math.min(1, kamera.aspect)));
+  kamera.updateProjectionMatrix();
+  rendereri.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  rendereri.setSize(sigane, simagle, false);
+  daxatvisMotxovna();
+
+}
+
+kontroli.addEventListener('change', daxatvisMotxovna);
+kutxe.addEventListener('input', sinatlisMimartva);
+window.addEventListener('resize', zomisMorgeba);
+sinatlisMimartva();
+zomisMorgeba();
+
+// მსოფლიო რუკა სფეროს ზედაპირს ეკვატორისა და პოლუსების გასწვრივ ერგება
+const chamtvirtveli = new THREE.TextureLoader();
+
+chamtvirtveli.load('./textures/dedamica.png', function (teqstura) {
+
+  teqstura.encoding = THREE.sRGBEncoding;
+  masala.map = teqstura;
+
+  masala.needsUpdate = true;
+  mdgomareoba.hidden = true;
+
+  daxatvisMotxovna();
+
+}, undefined, function () {
+
+  mdgomareoba.textContent = 'რუკა ვერ ჩაიტვირთა — გადაამოწმე textures საქაღალდე და გაუშვი პროექტი Live Server-ით';
+
+});
